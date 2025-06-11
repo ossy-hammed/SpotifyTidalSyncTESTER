@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import type { User } from "@shared/schema";
 import PlaylistPreview from "./playlist-preview";
 import TransferProgress from "../transfer/transfer-progress";
 import TransferResults from "../transfer/transfer-results";
@@ -17,7 +18,7 @@ export default function ImportSection() {
   const [transferStatus, setTransferStatus] = useState<string>("");
   const { toast } = useToast();
 
-  const { data: user } = useQuery({
+  const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
   });
 
@@ -66,7 +67,7 @@ export default function ImportSection() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -109,7 +110,7 @@ export default function ImportSection() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -162,7 +163,7 @@ export default function ImportSection() {
     }
   };
 
-  const canTransfer = user?.spotifyConnected && user?.tidalConnected;
+  const canTransfer = !!(user?.spotifyConnected && user?.tidalConnected);
 
   // Show transfer results if completed
   if (transferStatus === "completed" && currentTransfer) {
