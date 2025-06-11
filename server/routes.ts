@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { Server as SocketIOServer } from 'socket.io';
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./localAuth";
 import { SpotifyAPI, getSpotifyAuthUrl, exchangeSpotifyCode } from "./spotifyApi";
 import { TidalAPI } from "./tidalApi";
 import { transferService } from "./transferService";

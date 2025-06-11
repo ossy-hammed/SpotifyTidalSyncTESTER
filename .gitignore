@@ -33,6 +33,7 @@ parts/
 sdist/
 var/
 wheels/
+!client/src/lib/
 *.egg-info/
 .installed.cfg
 *.egg

@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import type { User } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +9,7 @@ import { queryClient } from "@/lib/queryClient";
 export default function AuthSection() {
   const { toast } = useToast();
 
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
   });
 
@@ -33,7 +34,7 @@ export default function AuthSection() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -71,7 +72,7 @@ export default function AuthSection() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -133,9 +134,9 @@ export default function AuthSection() {
                 </span>
               </div>
             </div>
-            <Button
-              onClick={() => spotifyAuthMutation.mutate()}
-              disabled={spotifyAuthMutation.isPending || user?.spotifyConnected}
+              <Button
+                onClick={() => spotifyAuthMutation.mutate()}
+                disabled={spotifyAuthMutation.isPending || !!user?.spotifyConnected}
               className="w-full bg-spotify text-white py-3 rounded-lg font-medium hover:bg-spotify/90 transition-colors disabled:opacity-50"
             >
               {spotifyAuthMutation.isPending ? (
@@ -175,9 +176,9 @@ export default function AuthSection() {
                 </span>
               </div>
             </div>
-            <Button
-              onClick={() => tidalAuthMutation.mutate()}
-              disabled={tidalAuthMutation.isPending || user?.tidalConnected}
+              <Button
+                onClick={() => tidalAuthMutation.mutate()}
+                disabled={tidalAuthMutation.isPending || !!user?.tidalConnected}
               className="w-full bg-tidal text-white py-3 rounded-lg font-medium hover:bg-tidal/90 transition-colors disabled:opacity-50"
             >
               {tidalAuthMutation.isPending ? (

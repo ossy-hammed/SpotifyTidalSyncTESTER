@@ -4,7 +4,7 @@ import Header from "@/components/layout/header";
 
 export default function Landing() {
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    window.location.href = "/login";
   };
 
   return (

@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import type { Transfer } from "@shared/schema";
 
 export default function RecentTransfers() {
-  const { data: transfers, isLoading } = useQuery({
+  const { data: transfers, isLoading } = useQuery<Transfer[]>({
     queryKey: ["/api/transfers"],
   });
 
