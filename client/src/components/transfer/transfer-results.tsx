@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Transfer, TrackMatch } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,13 +11,11 @@ interface TransferResultsProps {
 export default function TransferResults({ transferId, onStartNew }: TransferResultsProps) {
   const { toast } = useToast();
 
-  const { data: transfer, isLoading } = useQuery<
-    Transfer & { progressData: any; resultData: any }
-  >({
+  const { data: transfer, isLoading } = useQuery({
     queryKey: ["/api/transfers", transferId],
   });
 
-  const { data: matches } = useQuery<TrackMatch[]>({
+  const { data: matches } = useQuery({
     queryKey: ["/api/transfers", transferId, "matches"],
   });
 
@@ -52,7 +49,7 @@ export default function TransferResults({ transferId, onStartNew }: TransferResu
     const report = {
       transfer: {
         playlist: transfer.spotifyPlaylistName,
-        date: new Date(transfer.createdAt ?? Date.now()).toISOString(),
+        date: new Date(transfer.createdAt).toISOString(),
         total: transfer.totalTracks,
         successful: transfer.successfulTracks,
         partial: transfer.partialTracks,
@@ -106,8 +103,8 @@ export default function TransferResults({ transferId, onStartNew }: TransferResu
     );
   }
 
-  const matchRate = transfer.totalTracks > 0
-    ? Math.round(((transfer.successfulTracks ?? 0) / transfer.totalTracks) * 100)
+  const matchRate = transfer.totalTracks > 0 
+    ? Math.round((transfer.successfulTracks / transfer.totalTracks) * 100)
     : 0;
 
   return (
@@ -124,17 +121,17 @@ export default function TransferResults({ transferId, onStartNew }: TransferResu
         {/* Results Summary */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-6 text-center">
-            <div className="text-3xl font-bold text-green-500 mb-2">{transfer.successfulTracks ?? 0}</div>
+            <div className="text-3xl font-bold text-green-500 mb-2">{transfer.successfulTracks}</div>
             <div className="text-sm text-gray-400">Successfully Added</div>
             <div className="text-xs text-green-400 mt-1">{matchRate}% match rate</div>
           </div>
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-6 text-center">
-            <div className="text-3xl font-bold text-yellow-500 mb-2">{transfer.partialTracks ?? 0}</div>
+            <div className="text-3xl font-bold text-yellow-500 mb-2">{transfer.partialTracks}</div>
             <div className="text-sm text-gray-400">Partial Matches</div>
             <div className="text-xs text-yellow-400 mt-1">Similar versions found</div>
           </div>
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
-            <div className="text-3xl font-bold text-red-500 mb-2">{transfer.failedTracks ?? 0}</div>
+            <div className="text-3xl font-bold text-red-500 mb-2">{transfer.failedTracks}</div>
             <div className="text-sm text-gray-400">Not Found</div>
             <div className="text-xs text-red-400 mt-1">Not available on TIDAL</div>
           </div>
@@ -151,7 +148,7 @@ export default function TransferResults({ transferId, onStartNew }: TransferResu
                 <div>
                   <h4 className="font-semibold">{transfer.tidalPlaylistName}</h4>
                   <p className="text-sm text-gray-400">
-                    Created on TIDAL • {(transfer.successfulTracks ?? 0) + (transfer.partialTracks ?? 0)} tracks
+                    Created on TIDAL • {transfer.successfulTracks + transfer.partialTracks} tracks
                   </p>
                 </div>
               </div>

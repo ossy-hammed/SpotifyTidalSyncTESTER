@@ -6,9 +6,9 @@ export default function Header() {
 
   const handleAuth = () => {
     if (isAuthenticated) {
-      window.location.href = "/api/auth/logout";
+      window.location.href = "/api/logout";
     } else {
-      window.location.href = "/login";
+      window.location.href = "/api/login";
     }
   };
 

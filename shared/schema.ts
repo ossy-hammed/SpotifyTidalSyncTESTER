@@ -1,70 +1,78 @@
 import {
-  sqliteTable,
+  pgTable,
   text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  serial,
   integer,
-} from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+  boolean,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
 // Session storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
-export const sessions = sqliteTable("sessions", {
-  sid: text("sid").primaryKey(),
-  sess: text("sess").notNull(),
-  expire: integer("expire", { mode: "timestamp_ms" }).notNull(),
-});
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
 
 // User storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
-export const users = sqliteTable("users", {
-  id: text("id").primaryKey().notNull(),
-  email: text("email").unique(),
-  passwordHash: text("password_hash"),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  profileImageUrl: text("profile_image_url"),
-  spotifyConnected: integer("spotify_connected", { mode: "boolean" }).default(false),
-  tidalConnected: integer("tidal_connected", { mode: "boolean" }).default(false),
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  spotifyConnected: boolean("spotify_connected").default(false),
+  tidalConnected: boolean("tidal_connected").default(false),
   spotifyAccessToken: text("spotify_access_token"),
   spotifyRefreshToken: text("spotify_refresh_token"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Transfer history table
-export const transfers = sqliteTable("transfers", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  userId: text("user_id").notNull().references(() => users.id),
-  spotifyPlaylistId: text("spotify_playlist_id").notNull(),
-  spotifyPlaylistName: text("spotify_playlist_name").notNull(),
-  tidalPlaylistId: text("tidal_playlist_id"),
-  tidalPlaylistName: text("tidal_playlist_name"),
-  status: text("status").notNull(), // 'pending', 'in-progress', 'completed', 'failed'
+export const transfers = pgTable("transfers", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  spotifyPlaylistId: varchar("spotify_playlist_id").notNull(),
+  spotifyPlaylistName: varchar("spotify_playlist_name").notNull(),
+  tidalPlaylistId: varchar("tidal_playlist_id"),
+  tidalPlaylistName: varchar("tidal_playlist_name"),
+  status: varchar("status").notNull(), // 'pending', 'in-progress', 'completed', 'failed'
   totalTracks: integer("total_tracks").notNull(),
   successfulTracks: integer("successful_tracks").default(0),
   partialTracks: integer("partial_tracks").default(0),
   failedTracks: integer("failed_tracks").default(0),
-  progressData: text("progress_data"),
-  resultData: text("result_data"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+  progressData: jsonb("progress_data"), // Store real-time progress
+  resultData: jsonb("result_data"), // Store detailed results
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Track matching results for detailed reporting
-export const trackMatches = sqliteTable("track_matches", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const trackMatches = pgTable("track_matches", {
+  id: serial("id").primaryKey(),
   transferId: integer("transfer_id").notNull().references(() => transfers.id),
-  spotifyTrackId: text("spotify_track_id").notNull(),
-  spotifyTrackName: text("spotify_track_name").notNull(),
-  spotifyArtistName: text("spotify_artist_name").notNull(),
-  tidalTrackId: text("tidal_track_id"),
-  tidalTrackName: text("tidal_track_name"),
-  tidalArtistName: text("tidal_artist_name"),
+  spotifyTrackId: varchar("spotify_track_id").notNull(),
+  spotifyTrackName: varchar("spotify_track_name").notNull(),
+  spotifyArtistName: varchar("spotify_artist_name").notNull(),
+  tidalTrackId: varchar("tidal_track_id"),
+  tidalTrackName: varchar("tidal_track_name"),
+  tidalArtistName: varchar("tidal_artist_name"),
   matchConfidence: integer("match_confidence"), // 0-100
-  matchStatus: text("match_status").notNull(), // 'success', 'partial', 'failed'
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+  matchStatus: varchar("match_status").notNull(), // 'success', 'partial', 'failed'
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Relations
@@ -90,22 +98,16 @@ export const trackMatchesRelations = relations(trackMatches, ({ one }) => ({
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
-  passwordHash: true,
   firstName: true,
   lastName: true,
   profileImageUrl: true,
 });
 
-export const insertTransferSchema = createInsertSchema(transfers)
-  .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .extend({
-    progressData: z.any().optional(),
-    resultData: z.any().optional(),
-  });
+export const insertTransferSchema = createInsertSchema(transfers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 export const insertTrackMatchSchema = createInsertSchema(trackMatches).omit({
   id: true,
