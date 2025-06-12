@@ -205,11 +205,11 @@ export class TransferService extends EventEmitter {
           successful,
           partial,
           failed,
-        } as any,
+        },
         resultData: {
           tidalPlaylistUrl: `https://tidal.com/browse/playlist/${tidalPlaylist.uuid}`,
           matchRate: Math.round((successful / spotifyTracks.length) * 100),
-        } as any,
+        },
       });
 
       // Emit completion
@@ -227,7 +227,7 @@ export class TransferService extends EventEmitter {
       
       await storage.updateTransfer(transferId, {
         status: 'failed',
-        resultData: { error: error instanceof Error ? error.message : 'Unknown error' } as any,
+        resultData: { error: error instanceof Error ? error.message : 'Unknown error' },
       });
 
       this.emit('failed', { transferId, error: error instanceof Error ? error.message : 'Unknown error' });

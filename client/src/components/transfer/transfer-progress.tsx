@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import type { Transfer } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -34,7 +33,7 @@ export default function TransferProgress({ transferId, onComplete, onCancel }: T
   const [progress, setProgress] = useState<ProgressData | null>(null);
   const { toast } = useToast();
 
-  const { data: transfer } = useQuery<Transfer>({
+  const { data: transfer } = useQuery({
     queryKey: ["/api/transfers", transferId],
     refetchInterval: 5000, // Fallback polling
   });

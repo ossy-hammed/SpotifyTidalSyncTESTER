@@ -15,9 +15,8 @@ import { eq, desc } from "drizzle-orm";
 // Interface for storage operations
 export interface IStorage {
   // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Transfer operations
@@ -44,16 +43,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
-  }
-
-  async createUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(userData).returning();
-    return user;
-  }
-
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -73,51 +62,31 @@ export class DatabaseStorage implements IStorage {
   async createTransfer(transfer: InsertTransfer): Promise<Transfer> {
     const [newTransfer] = await db
       .insert(transfers)
-      .values({
-        ...transfer,
-        progressData: transfer.progressData ? JSON.stringify(transfer.progressData) : null,
-        resultData: transfer.resultData ? JSON.stringify(transfer.resultData) : null,
-      })
+      .values(transfer)
       .returning();
     return newTransfer;
   }
 
   async getTransfer(id: number): Promise<Transfer | undefined> {
     const [transfer] = await db.select().from(transfers).where(eq(transfers.id, id));
-    if (transfer && typeof transfer.progressData === 'string') {
-      transfer.progressData = JSON.parse(transfer.progressData);
-    }
-    if (transfer && typeof transfer.resultData === 'string') {
-      transfer.resultData = JSON.parse(transfer.resultData);
-    }
     return transfer;
   }
 
   async updateTransfer(id: number, updates: Partial<Transfer>): Promise<Transfer> {
     const [updatedTransfer] = await db
       .update(transfers)
-      .set({
-        ...updates,
-        progressData: updates.progressData ? JSON.stringify(updates.progressData) : undefined,
-        resultData: updates.resultData ? JSON.stringify(updates.resultData) : undefined,
-        updatedAt: new Date(),
-      })
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(transfers.id, id))
       .returning();
     return updatedTransfer;
   }
 
   async getUserTransfers(userId: string): Promise<Transfer[]> {
-    const rows = await db
+    return await db
       .select()
       .from(transfers)
       .where(eq(transfers.userId, userId))
       .orderBy(desc(transfers.createdAt));
-    return rows.map((t: any) => ({
-      ...t,
-      progressData: t.progressData ? JSON.parse(t.progressData) : null,
-      resultData: t.resultData ? JSON.parse(t.resultData) : null,
-    }));
   }
 
   // Track match operations
